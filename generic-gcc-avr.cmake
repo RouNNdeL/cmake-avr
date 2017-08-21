@@ -98,7 +98,7 @@ if(NOT AVR_SIZE_ARGS)
    if(APPLE)
       set(AVR_SIZE_ARGS -B)
    else(APPLE)
-      set(AVR_SIZE_ARGS -C;--mcu=${AVR_MCU})
+      set(AVR_SIZE_ARGS -B)
    endif(APPLE)
 endif(NOT AVR_SIZE_ARGS)
 
@@ -206,64 +206,12 @@ function(add_avr_executable EXECUTABLE_NAME)
 
    # upload - with avrdude
    add_custom_target(
-      upload_${EXECUTABLE_NAME}
+      _upload_${EXECUTABLE_NAME}
       ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} ${AVR_UPLOADTOOL_OPTIONS}
          -U flash:w:${hex_file}
          -P ${AVR_UPLOADTOOL_PORT}
       DEPENDS ${hex_file}
       COMMENT "Uploading ${hex_file} to ${AVR_MCU} using ${AVR_PROGRAMMER}"
-   )
-
-   # upload eeprom only - with avrdude
-   # see also bug http://savannah.nongnu.org/bugs/?40142
-   add_custom_target(
-      upload_eeprom
-      ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} ${AVR_UPLOADTOOL_OPTIONS}
-         -U eeprom:w:${eeprom_image}
-         -P ${AVR_UPLOADTOOL_PORT}
-      DEPENDS ${eeprom_image}
-      COMMENT "Uploading ${eeprom_image} to ${AVR_MCU} using ${AVR_PROGRAMMER}"
-   )
-
-   # get status
-   add_custom_target(
-      get_status
-      ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} -P ${AVR_UPLOADTOOL_PORT} -n -v
-      COMMENT "Get status from ${AVR_MCU}"
-   )
-
-   # get fuses
-   add_custom_target(
-      get_fuses
-      ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} -P ${AVR_UPLOADTOOL_PORT} -n
-         -U lfuse:r:-:b
-         -U hfuse:r:-:b
-      COMMENT "Get fuses from ${AVR_MCU}"
-   )
-
-   # set fuses
-   add_custom_target(
-      set_fuses
-      ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} -P ${AVR_UPLOADTOOL_PORT}
-         -U lfuse:w:${AVR_L_FUSE}:m
-         -U hfuse:w:${AVR_H_FUSE}:m
-         COMMENT "Setup: High Fuse: ${AVR_H_FUSE} Low Fuse: ${AVR_L_FUSE}"
-   )
-
-   # get oscillator calibration
-   add_custom_target(
-      get_calibration
-         ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} -P ${AVR_UPLOADTOOL_PORT}
-         -U calibration:r:${AVR_MCU}_calib.tmp:r
-         COMMENT "Write calibration status of internal oscillator to ${AVR_MCU}_calib.tmp."
-   )
-
-   # set oscillator calibration
-   add_custom_target(
-      set_calibration
-      ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} -P ${AVR_UPLOADTOOL_PORT}
-         -U calibration:w:${AVR_MCU}_calib.hex
-         COMMENT "Program calibration status of internal oscillator from ${AVR_MCU}_calib.hex."
    )
 
    # disassemble
@@ -274,6 +222,60 @@ function(add_avr_executable EXECUTABLE_NAME)
    )
 
 endfunction(add_avr_executable)
+
+function(add_avr_utils)
+    # upload eeprom only - with avrdude
+    # see also bug http://savannah.nongnu.org/bugs/?40142
+    add_custom_target(
+            upload_eeprom
+            ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} ${AVR_UPLOADTOOL_OPTIONS}
+            -U eeprom:w:${eeprom_image}
+            -P ${AVR_UPLOADTOOL_PORT}
+            DEPENDS ${eeprom_image}
+            COMMENT "Uploading ${eeprom_image} to ${AVR_MCU} using ${AVR_PROGRAMMER}"
+    )
+
+    # get status
+    add_custom_target(
+            get_status
+            ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} -P ${AVR_UPLOADTOOL_PORT} -n -v
+            COMMENT "Get status from ${AVR_MCU}"
+    )
+
+    # get fuses
+    add_custom_target(
+            get_fuses
+            ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} -P ${AVR_UPLOADTOOL_PORT} -n
+            -U lfuse:r:-:b
+            -U hfuse:r:-:b
+            COMMENT "Get fuses from ${AVR_MCU}"
+    )
+
+    # set fuses
+    add_custom_target(
+            set_fuses
+            ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} -P ${AVR_UPLOADTOOL_PORT}
+            -U lfuse:w:${AVR_L_FUSE}:m
+            -U hfuse:w:${AVR_H_FUSE}:m
+            COMMENT "Setup: High Fuse: ${AVR_H_FUSE} Low Fuse: ${AVR_L_FUSE}"
+    )
+
+    # get oscillator calibration
+    add_custom_target(
+            get_calibration
+            ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} -P ${AVR_UPLOADTOOL_PORT}
+            -U calibration:r:${AVR_MCU}_calib.tmp:r
+            COMMENT "Write calibration status of internal oscillator to ${AVR_MCU}_calib.tmp."
+    )
+
+    # set oscillator calibration
+    add_custom_target(
+            set_calibration
+            ${AVR_UPLOADTOOL} -p ${AVR_MCU} -c ${AVR_PROGRAMMER} -P ${AVR_UPLOADTOOL_PORT}
+            -U calibration:w:${AVR_MCU}_calib.hex
+            COMMENT "Program calibration status of internal oscillator from ${AVR_MCU}_calib.hex."
+    )
+endfunction(add_avr_utils)
 
 ##########################################################################
 # add_avr_library
